@@ -13,32 +13,41 @@ app.get('/', (req, res) => {
 
 // Stress test endpoint
 app.post('/stress-test', async (req, res) => {
-  const payload = req.body;
+  try {
+    const buyerCount = req.body.buyer_count || 10;
 
-  const totalBuyer = payload.buyer_count || 100;
-  const batch = payload.batch || 1;
+    const transactions = [];
 
-  console.log(`Batch ${batch} started for ${totalBuyer} buyers`);
+    for (let i = 0; i < buyerCount; i++) {
+      transactions.push({
+        idPembeli: 'B' + Math.random().toString(36).substring(2, 10),
+        idToko: 'TOKO001',
+        produk: 'ProdukChaos',
+        qty: 1,
+        harga: 10000
+      });
+    }
 
-  let result = [];
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbypkJFWSFNGBLtWYoBCJk7qtqDGQlmgkV4iuULpmPdKPe0DeHzfirUqMzJMp3GpW0_bSg/exec';
 
-  for (let i = 1; i <= totalBuyer; i++) {
-    const buyer = {
-      buyer_id: `BUYER_${batch}_${i}`,
-      status: 'processed'
-    };
+    const response = await axios.post(scriptUrl, {
+      transactions: transactions
+    });
 
-    result.push(buyer);
+    res.json({
+      status: 'success',
+      sent: transactions.length,
+      result: response.data
+    });
 
-    console.log(`Processed ${buyer.buyer_id}`);
+  } catch (err) {
+    console.error(err.message);
+
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
   }
-
-  res.json({
-    status: 'ok',
-    batch: batch,
-    total_processed: totalBuyer,
-    result: result
-  });
 });
 
 // Start server
