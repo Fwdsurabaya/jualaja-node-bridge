@@ -4,30 +4,44 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json()); // untuk menerima JSON
+app.use(express.json());
 
-// Test endpoint root
-app.get('/', (req,res)=>{
+// Root endpoint
+app.get('/', (req, res) => {
   res.send('JualAja Node Bridge Active');
 });
 
-// Endpoint stress test
-app.post('/stress-test', async (req,res)=>{
-  const payload = req.body; 
-  console.log('Stress test request:', payload);
+// Stress test endpoint
+app.post('/stress-test', async (req, res) => {
+  const payload = req.body;
 
-  // Simulasikan batch buyer (contoh)
-  const buyers = Array(payload.buyer_count || 10).fill(0).map((_,i)=>`Buyer${i+1}`);
-  buyers.forEach(buyer => {
-    console.log(`Simulasi order untuk ${buyer}`);
-    // TODO: implementasi panggil Google Sheets API
+  const totalBuyer = payload.buyer_count || 100;
+  const batch = payload.batch || 1;
+
+  console.log(`Batch ${batch} started for ${totalBuyer} buyers`);
+
+  let result = [];
+
+  for (let i = 1; i <= totalBuyer; i++) {
+    const buyer = {
+      buyer_id: `BUYER_${batch}_${i}`,
+      status: 'processed'
+    };
+
+    result.push(buyer);
+
+    console.log(`Processed ${buyer.buyer_id}`);
+  }
+
+  res.json({
+    status: 'ok',
+    batch: batch,
+    total_processed: totalBuyer,
+    result: result
   });
-
-  res.json({status:'ok', message:`Batch ${payload.batch || 1} processed ${buyers.length} buyers`});
 });
 
-// Jalankan server
-app.listen(PORT,'0.0.0.0',()=>{
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
-
